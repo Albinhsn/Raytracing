@@ -1,8 +1,6 @@
 #ifndef RTWEEKEND_H
 #define RTWEEKEND_H
 
-#include "ray.h"
-#include "vec3.h"
 #include <cmath>
 #include <cstdlib>
 #include <limits>

@@ -9,18 +9,23 @@
 
 #include "color.h"
 #include "hittable.h"
+#include "vec3.h"
+#include <chrono>
 #include <cstdio>
 #include <iostream>
+#include <string>
 
 class camera {
     public:
         double aspect_ratio = 1.0;
         int image_width = 100;
         int samples_per_pixel = 10;
+        int max_depth = 10;
 
         void render(const hittable &world) {
             initialize();
 
+            const auto p1 = std::chrono::system_clock::now().time_since_epoch();
             std::cout << "P3\n" << image_width << " " << image_height << "\n255\n";
 
             for (int j = 0; j < image_height; j++) {
@@ -29,12 +34,14 @@ class camera {
                     color pixel_color(0, 0, 0);
                     for (int sample = 0; sample < samples_per_pixel; ++sample) {
                         ray r = get_ray(i, j);
-                        pixel_color += ray_color(r, world);
+                        pixel_color += ray_color(r, max_depth, world);
                     }
                     write_color(std::cout, pixel_color, samples_per_pixel);
                 }
             }
-            std::clog << "\rDone.                 \n";
+            auto fps = ((std::chrono::system_clock::now().time_since_epoch() - p1));
+            std::clog << "\rDone after: " << (fps / std::chrono::milliseconds(1))
+                      << " milliseconds               \n";
         }
 
     private:
@@ -81,10 +88,15 @@ class camera {
             pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
         }
 
-        color ray_color(const ray &r, const hittable &world) const {
+        color ray_color(const ray &r, int depth, const hittable &world) const {
             hit_record rec;
-            if (world.hit(r, interval(0, infinity), rec)) {
-                return 0.5 * (rec.normal + color(1, 1, 1));
+            if (depth <= 0) {
+                return color(0, 0, 0);
+            }
+
+            if (world.hit(r, interval(0.001, infinity), rec)) {
+                vec3 direction = rec.normal + random_unit_vector();
+                return 0.5 * ray_color(ray(rec.p, direction), depth - 1, world);
             }
 
             vec3 unit_direction = unit_vector(r.direction());

@@ -6,3 +6,6 @@ br:
 
 i:
 	eog image.ppm
+
+bri:
+	g++ $(FILES) -o main && ./main > image.ppm && eog image.ppm

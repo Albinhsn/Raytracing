@@ -1,10 +1,7 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-// Is responsible for two things
-// 1. COnstruct and dispatch rays into the world
-// 2. Use the results of these rays to construct the rendered image
-
+#include "material.h"
 #include "rtweekend.h"
 
 #include "color.h"
@@ -40,8 +37,7 @@ class camera {
                 }
             }
             auto fps = ((std::chrono::system_clock::now().time_since_epoch() - p1));
-            std::clog << "\rDone after: " << (fps / std::chrono::milliseconds(1))
-                      << " milliseconds               \n";
+            std::clog << "\rDone after: " << (fps / std::chrono::milliseconds(1)) << " milliseconds               \n";
         }
 
     private:
@@ -95,8 +91,12 @@ class camera {
             }
 
             if (world.hit(r, interval(0.001, infinity), rec)) {
-                vec3 direction = rec.normal + random_unit_vector();
-                return 0.5 * ray_color(ray(rec.p, direction), depth - 1, world);
+                ray scattered;
+                color attenuation;
+                if (rec.mat->scatter(r, rec, attenuation, scattered)) {
+                    return attenuation * ray_color(scattered, depth - 1, world);
+                }
+                return color(0, 0, 0);
             }
 
             vec3 unit_direction = unit_vector(r.direction());

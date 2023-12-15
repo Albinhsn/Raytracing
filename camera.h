@@ -24,6 +24,9 @@ class camera {
         point3 lookat = point3(0, 0, 0);
         vec3 vup = vec3(0, 1, 0);
 
+        double defocus_angle = 0;
+        double focus_dist = 10;
+
         void render(const hittable &world) {
             initialize();
 
@@ -55,11 +58,14 @@ class camera {
         vec3 pixel_delta_v;
         vec3 u, v, w;
 
+        vec3 defocus_disk_u;
+        vec3 defocus_disk_v;
+
         ray get_ray(int i, int j) const {
             auto pixel_center = pixel00_loc + (i * pixel_delta_u) + (j * pixel_delta_v);
             auto pixel_sample = pixel_center + pixel_sample_square();
 
-            auto ray_origin = center;
+            auto ray_origin = (defocus_angle <= 0) ? center : defocus_disk_sample();
             auto ray_direction = pixel_sample - ray_origin;
 
             return ray(ray_origin, ray_direction);
@@ -78,10 +84,9 @@ class camera {
             center = lookfrom;
 
             // Determine viewport dimension
-            auto focal_length = (lookfrom - lookat).length();
             auto theta = degrees_to_radians(vfov);
             auto h = tan(theta / 2);
-            auto viewport_height = 2 * h * focal_length;
+            auto viewport_height = 2 * h * focus_dist;
             auto viewport_width = viewport_height * (static_cast<double>(image_width) / image_height);
 
             w = unit_vector(lookfrom - lookat);
@@ -94,8 +99,16 @@ class camera {
             pixel_delta_u = viewport_u / image_width;
             pixel_delta_v = viewport_v / image_height;
 
-            auto viewport_upper_left = center - (focal_length * w) - viewport_u / 2 - viewport_v / 2;
+            auto viewport_upper_left = center - (focus_dist * w) - viewport_u / 2 - viewport_v / 2;
             pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
+
+            auto defocus_radius = focus_dist * tan(degrees_to_radians(defocus_angle / 2));
+            defocus_disk_u = u * defocus_radius;
+            defocus_disk_v = v * defocus_radius;
+        }
+        point3 defocus_disk_sample() const {
+            auto p = random_in_unit_disk();
+            return center + (p[0] * defocus_disk_u) + (p[1] * defocus_disk_v);
         }
 
         color ray_color(const ray &r, int depth, const hittable &world) const {

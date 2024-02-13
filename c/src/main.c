@@ -23,7 +23,7 @@ i32 main()
   Camera camera;
   camera.aspectRatio = 16.0f / 9.0f;
   camera.imageWidth  = 400;
-  camera.samples = 1;
+  camera.samples = 100;
 
   render(&camera, world, worldLen);
 }

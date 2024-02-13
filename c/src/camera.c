@@ -16,7 +16,7 @@ Ray getRay(Camera* camera, i32 x, i32 y)
   Point pixelCenter  = addVec3f32(addVec3f32(camera->pixel00Loc, scaleVec3f32(camera->pixelDeltaU, x)), scaleVec3f32(camera->pixelDeltaV, y));
   Point pixelSample  = addVec3f32(pixelCenter, pixelSampleSquare(camera->pixelDeltaU, camera->pixelDeltaV));
 
-  Vec3  rayDirection = subVec3f32(pixelSample, camera->center);
+  Vec3  rayDirection = subVec3f32(pixelCenter, camera->center);
   Ray   r            = {.orig = camera->center, .dir = rayDirection};
   return r;
 }
@@ -36,7 +36,7 @@ void render(Camera* camera, Hittable* world, i32 worldLen)
       for (i32 sample = 0; sample < camera->samples; sample++)
       {
         Ray r      = getRay(camera, x, y);
-        pixelColor = addVec3f32(pixelColor, rayColor(&r, world, camera->samples));
+        pixelColor = addVec3f32(pixelColor, rayColor(&r, world, worldLen));
       }
       writeColor(pixelColor, camera->samples);
     }

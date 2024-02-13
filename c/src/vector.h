@@ -120,6 +120,6 @@ f32            dotVec3f32(struct Vec3f32 v0, struct Vec3f32 v1);
 struct Vec3f32 crossVec3f32(struct Vec3f32 v0, struct Vec3f32 v1);
 struct Vec3f32 normalizeVec3f32(struct Vec3f32 v);
 void           debugVec3f32(struct Vec3f32 v);
-void           writeColor(Color v);
+void writeColor(Color v, i32 samples);
 
 #endif

@@ -10,6 +10,19 @@ bool intervalSurrounds(Interval i, f32 x)
   return i.min < x && x < i.max;
 }
 
+f32 clamp(Interval i, f32 x)
+{
+  if (x < i.min)
+  {
+    return i.min;
+  }
+  if (x > i.max)
+  {
+    return i.max;
+  }
+  return x;
+}
+
 Vec3f32 scaleVec3f32(Vec3f32 v, f32 t)
 {
   Vec3f32 res = {.x = v.x * t, .y = v.y * t, .z = v.z * t};
@@ -76,9 +89,20 @@ Vec3f32 normalizeVec3f32(Vec3f32 v)
 {
   return divideVec3f32(v, lengthVec3f32(v));
 }
-void writeColor(Color v)
+void writeColor(Color v, i32 samples)
 {
-  printf("%d %d %d\n", (i32)(v.x * 255.999), (i32)(v.y * 255.999), (i32)(v.z * 255.999));
+  f32 r     = v.x;
+  f32 g     = v.y;
+  f32 b     = v.z;
+
+  f32 scale = 1.0 / (f32)samples;
+  r *= scale;
+  g *= scale;
+  b *= scale;
+
+  Interval i = CREATE_INTERVAL(0.0, 0.999f);
+
+  printf("%d %d %d\n", (i32)(256 * clamp(i, r)), (i32)(256 * clamp(i, g)), (i32)(256 * clamp(i, b)));
 }
 
 void debugVec3f32(Vec3f32 v)

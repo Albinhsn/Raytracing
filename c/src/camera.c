@@ -1,5 +1,25 @@
 #include "camera.h"
+#include "common.h"
+#include "vector.h"
 #include <stdio.h>
+
+Vec3 pixelSampleSquare(Vec3 pixelDeltaU, Vec3 pixelDeltaV)
+{
+  f32 px = -0.5f + RANDOM_DOUBLE;
+  f32 py = -0.5f + RANDOM_DOUBLE;
+
+  return addVec3f32(scaleVec3f32(pixelDeltaU, px), scaleVec3f32(pixelDeltaV, py));
+}
+
+Ray getRay(Camera* camera, i32 x, i32 y)
+{
+  Point pixelCenter  = addVec3f32(addVec3f32(camera->pixel00Loc, scaleVec3f32(camera->pixelDeltaU, x)), scaleVec3f32(camera->pixelDeltaV, y));
+  Point pixelSample  = addVec3f32(pixelCenter, pixelSampleSquare(camera->pixelDeltaU, camera->pixelDeltaV));
+
+  Vec3  rayDirection = subVec3f32(pixelSample, camera->center);
+  Ray   r            = {.orig = camera->center, .dir = rayDirection};
+  return r;
+}
 
 void render(Camera* camera, Hittable* world, i32 worldLen)
 {
@@ -12,11 +32,13 @@ void render(Camera* camera, Hittable* world, i32 worldLen)
     fprintf(stderr, "\rScanlines remaining: %d", (camera->imageHeight - y));
     for (i32 x = 0; x < camera->imageWidth; x++)
     {
-      Point pixelCenter  = addVec3f32(addVec3f32(camera->pixel00Loc, scaleVec3f32(camera->pixelDeltaU, x)), scaleVec3f32(camera->pixelDeltaV, y));
-      Vec3  rayDirection = subVec3f32(pixelCenter, camera->center);
-      Ray   r            = {.orig = camera->center, .dir = rayDirection};
-      Color pixelColor   = rayColor(&r, world, worldLen);
-      writeColor(pixelColor);
+      Color pixelColor = BLACK;
+      for (i32 sample = 0; sample < camera->samples; sample++)
+      {
+        Ray r      = getRay(camera, x, y);
+        pixelColor = addVec3f32(pixelColor, rayColor(&r, world, camera->samples));
+      }
+      writeColor(pixelColor, camera->samples);
     }
   }
   fprintf(stderr, "\rDone                                 \n");

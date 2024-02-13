@@ -14,6 +14,7 @@ struct Camera
   Point pixel00Loc;
   Vec3  pixelDeltaU;
   Vec3  pixelDeltaV;
+  u32 samples;
 };
 typedef struct Camera Camera;
 

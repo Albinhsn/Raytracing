@@ -4,10 +4,12 @@
 #include "common.h"
 #include "hittable.h"
 #include "vector.h"
+#include <stdlib.h>
 #include <stdbool.h>
 
 i32 main()
 {
+  srand(time(NULL));
 
   const i32 worldLen = 2;
   Hittable  world[worldLen];
@@ -21,6 +23,7 @@ i32 main()
   Camera camera;
   camera.aspectRatio = 16.0f / 9.0f;
   camera.imageWidth  = 400;
+  camera.samples = 1;
 
   render(&camera, world, worldLen);
 }

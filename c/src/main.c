@@ -1,40 +1,41 @@
 
 
 #include "common.h"
+#include "hittable.h"
 #include "ray.h"
 #include "vector.h"
+#include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 
-bool hitSphere(Point center, f32 radius, Ray r)
+Color rayColor(Ray* r, Hittable* world, i32 worldLength)
 {
-  Vec3 oc           = subVec3f32(r.orig, center);
-  f32  a            = dotVec3f32(r.dir, r.dir);
-  f32  b            = 2.0f * dotVec3f32(oc, r.dir);
-  f32  c            = dotVec3f32(oc, oc) - radius * radius;
-
-  f32  discriminant = b * b - 4 * a * c;
-
-  return discriminant >= 0;
-}
-
-Color rayColor(Ray r)
-{
-  if(hitSphere(CREATE_VEC3f32(0.0f, 0.0f, -1.0f), 0.5f, r)){
-    return RED;
+  HitRecord rec;
+  if (calculateRayIntersection(world, worldLength, r, CREATE_INTERVAL(0, INFINITY), &rec))
+  {
+    return scaleVec3f32(addVec3f32(rec.normal, CREATE_VEC3f32(1.0f, 1.0f, 1.0f)), 0.5f);
   }
 
-  Vec3 unitDirection = normalizeVec3f32(r.dir);
+  Vec3 unitDirection = normalizeVec3f32(r->dir);
   f32  a             = 0.5 * (unitDirection.y + 1.0f);
   return addVec3f32(scaleVec3f32(WHITE, (1.0 - a)), scaleVec3f32(SOMEBLUE, a));
 }
 
 i32 main()
 {
-  f32 aspectRatio         = 16.0f / 9.0f;
-  i32 imageWidth          = 400;
-  i32 imageHeight         = imageWidth / aspectRatio;
-  imageHeight             = imageHeight < 1 ? 1 : imageHeight;
+  f32 aspectRatio    = 16.0f / 9.0f;
+  i32 imageWidth     = 400;
+  i32 imageHeight    = imageWidth / aspectRatio;
+  imageHeight        = imageHeight < 1 ? 1 : imageHeight;
+
+  const i32 worldLen = 2;
+  Hittable  world[worldLen];
+  world[0] = (Hittable){
+      .type = SPHERE, .sphere = (Sphere){.radius = 0.5f, .center = CREATE_VEC3f32(0, 0, -1)}
+  };
+  world[1] = (Hittable){
+      .type = SPHERE, .sphere = (Sphere){.radius = 100.0f, .center = CREATE_VEC3f32(0, -100.5, -1)}
+  };
 
   f32   focalLength       = 1.0f;
   f32   viewportHeight    = 2.0f;
@@ -61,7 +62,7 @@ i32 main()
       Point pixelCenter  = addVec3f32(addVec3f32(pixel00Loc, scaleVec3f32(pixelDeltaU, x)), scaleVec3f32(pixelDeltaV, y));
       Vec3  rayDirection = subVec3f32(pixelCenter, cameraCenter);
       Ray   r            = {.orig = cameraCenter, .dir = rayDirection};
-      Color pixelColor   = rayColor(r);
+      Color pixelColor   = rayColor(&r, world, worldLen);
       writeColor(pixelColor);
     }
   }

@@ -2,9 +2,30 @@
 #define VECTOR_H
 
 #include "common.h"
+#include <math.h>
+#include <stdbool.h>
 
 #define CREATE_VEC4f32(x, y, z, w) ((struct Vec4f32){x, y, z, w})
 #define CREATE_VEC3f32(x, y, z)    ((struct Vec3f32){x, y, z})
+#define CREATE_VEC2f32(x, y)       ((struct Vec2f32){x, y})
+#define CREATE_INTERVAL(x, y)      CREATE_VEC2f32(x, y)
+struct Vec2f32
+{
+  union
+  {
+    f32 pos[2];
+    struct
+    {
+      f32 x;
+      f32 y;
+    };
+    struct
+    {
+      f32 min;
+      f32 max;
+    };
+  };
+};
 
 struct Vec3f32
 {
@@ -48,7 +69,6 @@ struct Vec4f32
   };
 };
 
-
 struct Matrix4x4
 {
   union
@@ -81,18 +101,25 @@ typedef struct Vec3f32 Point;
 typedef struct Vec3f32 Color;
 typedef struct Vec3f32 Vec3f32;
 typedef struct Vec3f32 Vec3;
+typedef struct Vec2f32 Interval;
 
-struct Vec3f32         scaleVec3f32(struct Vec3f32 v, f32 t);
-struct Vec3f32         addVec3f32(struct Vec3f32 v0, struct Vec3f32 v1);
-struct Vec3f32         subVec3f32(struct Vec3f32 v0, struct Vec3f32 v1);
-struct Vec3f32         mulVec3f32(struct Vec3f32 v0, struct Vec3f32 v1);
-struct Vec3f32         divideVec3f32(struct Vec3f32 v, f32 t);
-f32                    lengthVec3f32(struct Vec3f32 v);
-f32                    lengthSquaredVec3f32(struct Vec3f32 v);
-f32                    dotVec3f32(struct Vec3f32 v0, struct Vec3f32 v1);
-struct Vec3f32         crossVec3f32(struct Vec3f32 v0, struct Vec3f32 v1);
-struct Vec3f32         normalizeVec3f32(struct Vec3f32 v);
-void                   debugVec3f32(struct Vec3f32 v);
-void writeColor(Color v);
+#define EMPTY_INTERVAL    ((Interval)(INFINITY, -INFINITY))
+#define UNIVERSE_INTERVAL ((Interval)(-INFINITY, INFINITY))
+
+bool           intervalContains(Interval interval, f32 x);
+bool           intervalSurrounds(Interval interval, f32 x);
+
+struct Vec3f32 scaleVec3f32(struct Vec3f32 v, f32 t);
+struct Vec3f32 addVec3f32(struct Vec3f32 v0, struct Vec3f32 v1);
+struct Vec3f32 subVec3f32(struct Vec3f32 v0, struct Vec3f32 v1);
+struct Vec3f32 mulVec3f32(struct Vec3f32 v0, struct Vec3f32 v1);
+struct Vec3f32 divideVec3f32(struct Vec3f32 v, f32 t);
+f32            lengthVec3f32(struct Vec3f32 v);
+f32            lengthSquaredVec3f32(struct Vec3f32 v);
+f32            dotVec3f32(struct Vec3f32 v0, struct Vec3f32 v1);
+struct Vec3f32 crossVec3f32(struct Vec3f32 v0, struct Vec3f32 v1);
+struct Vec3f32 normalizeVec3f32(struct Vec3f32 v);
+void           debugVec3f32(struct Vec3f32 v);
+void           writeColor(Color v);
 
 #endif

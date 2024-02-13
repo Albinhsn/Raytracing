@@ -1,6 +1,14 @@
 #include "vector.h"
 #include <math.h>
 #include <stdio.h>
+bool intervalContains(Interval i, f32 x)
+{
+  return i.min <= x && x <= i.max;
+}
+bool intervalSurrounds(Interval i, f32 x)
+{
+  return i.min < x && x < i.max;
+}
 
 Vec3f32 scaleVec3f32(Vec3f32 v, f32 t)
 {

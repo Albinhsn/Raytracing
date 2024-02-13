@@ -51,7 +51,7 @@ f32 lengthSquaredVec3f32(Vec3f32 v)
 {
   return v.x * v.x + v.y * v.y + v.z * v.z;
 }
-f32 dotProductVec3f32(Vec3f32 v0, Vec3f32 v1)
+f32 dotVec3f32(Vec3f32 v0, Vec3f32 v1)
 {
   return v0.x * v1.x + v0.y * v1.y + v0.z * v1.z;
 }

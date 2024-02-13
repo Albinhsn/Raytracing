@@ -89,7 +89,7 @@ struct Vec3f32         mulVec3f32(struct Vec3f32 v0, struct Vec3f32 v1);
 struct Vec3f32         divideVec3f32(struct Vec3f32 v, f32 t);
 f32                    lengthVec3f32(struct Vec3f32 v);
 f32                    lengthSquaredVec3f32(struct Vec3f32 v);
-f32                    dotProductVec3f32(struct Vec3f32 v0, struct Vec3f32 v1);
+f32                    dotVec3f32(struct Vec3f32 v0, struct Vec3f32 v1);
 struct Vec3f32         crossVec3f32(struct Vec3f32 v0, struct Vec3f32 v1);
 struct Vec3f32         normalizeVec3f32(struct Vec3f32 v);
 void                   debugVec3f32(struct Vec3f32 v);

@@ -3,10 +3,26 @@
 #include "common.h"
 #include "ray.h"
 #include "vector.h"
+#include <stdbool.h>
 #include <stdio.h>
+
+bool hitSphere(Point center, f32 radius, Ray r)
+{
+  Vec3 oc           = subVec3f32(r.orig, center);
+  f32  a            = dotVec3f32(r.dir, r.dir);
+  f32  b            = 2.0f * dotVec3f32(oc, r.dir);
+  f32  c            = dotVec3f32(oc, oc) - radius * radius;
+
+  f32  discriminant = b * b - 4 * a * c;
+
+  return discriminant >= 0;
+}
 
 Color rayColor(Ray r)
 {
+  if(hitSphere(CREATE_VEC3f32(0.0f, 0.0f, -1.0f), 0.5f, r)){
+    return RED;
+  }
 
   Vec3 unitDirection = normalizeVec3f32(r.dir);
   f32  a             = 0.5 * (unitDirection.y + 1.0f);

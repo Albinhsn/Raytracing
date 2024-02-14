@@ -13,14 +13,22 @@ Vec3 pixelSampleSquare(Vec3 pixelDeltaU, Vec3 pixelDeltaV)
   return addVec3f32(scaleVec3f32(pixelDeltaU, px), scaleVec3f32(pixelDeltaV, py));
 }
 
+Point defocusDiskSample(Camera* camera)
+{
+  Point p = randomVec3f32InUnitDisk();
+  p       = (Vec3){-0.184263, -0.528258, 0.0};
+  return addVec3f32(camera->center, addVec3f32(scaleVec3f32(camera->defocusDiskU, p.x), scaleVec3f32(camera->defocusDiskV, p.y)));
+}
+
 Ray getRay(Camera* camera, i32 x, i32 y)
 {
-  Point pixelCenter  = addVec3f32(addVec3f32(camera->pixel00Loc, scaleVec3f32(camera->pixelDeltaU, x)), scaleVec3f32(camera->pixelDeltaV, y));
-  Point pixelSample  = addVec3f32(pixelCenter, pixelSampleSquare(camera->pixelDeltaU, camera->pixelDeltaV));
+  Point   pixelCenter  = addVec3f32(addVec3f32(camera->pixel00Loc, scaleVec3f32(camera->pixelDeltaU, x)), scaleVec3f32(camera->pixelDeltaV, y));
+  Point   pixelSample  = addVec3f32(pixelCenter, pixelSampleSquare(camera->pixelDeltaU, camera->pixelDeltaV));
 
-  Vec3  rayDirection = subVec3f32(pixelSample, camera->center);
-  Ray   r            = {.orig = camera->center, .dir = rayDirection};
-  return r;
+  Vec3f32 rayOrigin    = camera->defocusAngle <= 0 ? camera->center : defocusDiskSample(camera);
+  Vec3    rayDirection = subVec3f32(pixelSample, rayOrigin);
+
+  return (Ray){.orig = rayOrigin, .dir = rayDirection};
 }
 
 void render(Camera* camera, Hittable* world, i32 worldLen)
@@ -49,14 +57,12 @@ void initializeCamera(struct Camera* camera)
 {
   camera->imageHeight    = camera->imageWidth / camera->aspectRatio;
   camera->imageHeight    = camera->imageHeight < 1 ? 1 : camera->imageHeight;
-  camera->maxDepth       = 50;
 
   camera->center         = camera->lookfrom;
 
-  f32 focalLength        = lengthVec3f32(subVec3f32(camera->lookfrom, camera->lookat));
   f32 theta              = DEGREES_TO_RADIANS(camera->vfov);
   f32 h                  = tan(theta / 2);
-  f32 viewportHeight     = 2.0f * h * focalLength;
+  f32 viewportHeight     = 2.0f * h * camera->focusDist;
   f32 viewportWidth      = viewportHeight * ((f32)camera->imageWidth / camera->imageHeight);
 
   camera->w              = normalizeVec3f32(subVec3f32(camera->lookfrom, camera->lookat));
@@ -69,9 +75,14 @@ void initializeCamera(struct Camera* camera)
   camera->pixelDeltaU    = divideVec3f32(viewportU, camera->imageWidth);
   camera->pixelDeltaV    = divideVec3f32(viewportV, camera->imageHeight);
 
-  Vec3 viewportUpperLeft = subVec3f32(subVec3f32(subVec3f32(camera->center, scaleVec3f32(camera->w, focalLength)), divideVec3f32(viewportU, 2.0f)), divideVec3f32(viewportV, 2.0f));
+  Vec3 viewportUpperLeft = subVec3f32(subVec3f32(subVec3f32(camera->center, scaleVec3f32(camera->w, camera->focusDist)), divideVec3f32(viewportU, 2.0f)), divideVec3f32(viewportV, 2.0f));
 
   camera->pixel00Loc     = addVec3f32(viewportUpperLeft, scaleVec3f32(addVec3f32(camera->pixelDeltaU, camera->pixelDeltaV), 0.5f));
+
+  f32 defocusRadius      = camera->focusDist * tan(DEGREES_TO_RADIANS(camera->defocusAngle / 2));
+
+  camera->defocusDiskU   = scaleVec3f32(camera->u, defocusRadius);
+  camera->defocusDiskV   = scaleVec3f32(camera->v, defocusRadius);
 }
 Color rayColor(Ray* r, i32 depth, Hittable* world, i32 worldLength)
 {

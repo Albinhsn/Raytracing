@@ -21,6 +21,10 @@ struct Camera
   Point   lookat;
   Vec3f32 vUp;
   Vec3    u, v, w;
+  f32     defocusAngle;
+  f32     focusDist;
+  Vec3    defocusDiskU;
+  Vec3    defocusDiskV;
 };
 typedef struct Camera Camera;
 

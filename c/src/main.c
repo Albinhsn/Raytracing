@@ -4,7 +4,6 @@
 #include "common.h"
 #include "hittable.h"
 #include "vector.h"
-#include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,39 +13,69 @@ i32 main()
 
   srand(time(NULL));
 
-  Material ground = {.type = LAMBERTIAN, .lamb = (Lambertian){.albedo = CREATE_VEC3f32(0.8f, 0.8f, 0.0f)}};
-  Material center = {.type = LAMBERTIAN, .lamb = (Lambertian){.albedo = CREATE_VEC3f32(0.1f, 0.2f, 0.5f)}};
-  Material left   = {.type = DIELECTRIC, .dielectric = (Dielectric){.ir = 1.5f}};
-  Material right  = {
-       .type = METAL, .metal = (Metal){.albedo = CREATE_VEC3f32(0.8f, 0.6f, 0.2f), .fuzz = 0.0f}
+  Material ground   = {.type = LAMBERTIAN, .lamb = (Lambertian){.albedo = CREATE_VEC3f32(0.5f, 0.5f, 0.5f)}};
+  i32      worldLen = 1000;
+  Hittable world[worldLen];
+  world[0] = (Hittable){
+      .type = SPHERE, .sphere = (Sphere){.radius = 1000.0f, .center = CREATE_VEC3f32(0, -1000, 0), .mat = ground}
   };
 
-  const i32 worldLen = 5;
-  Hittable  world[worldLen];
-  world[0] = (Hittable){
-      .type = SPHERE, .sphere = (Sphere){.radius = 100.0f, .center = CREATE_VEC3f32(0, -100.5, -1), .mat = ground}
-  };
-  world[1] = (Hittable){
-      .type = SPHERE, .sphere = (Sphere){.radius = 0.5f, .center = CREATE_VEC3f32(0, 0, -1), .mat = center}
-  };
-  world[2] = (Hittable){
-      .type = SPHERE, .sphere = (Sphere){.radius = 0.5f, .center = CREATE_VEC3f32(-1, 0, -1), .mat = left}
-  };
-  world[3] = (Hittable){
-      .type = SPHERE, .sphere = (Sphere){.radius = -0.4f, .center = CREATE_VEC3f32(-1, 0, -1), .mat = left}
-  };
-  world[4] = (Hittable){
-      .type = SPHERE, .sphere = (Sphere){.radius = 0.5f, .center = CREATE_VEC3f32(1, 0, -1), .mat = right}
-  };
+  u32 count = 0;
+
+  for (i32 a = -11; a < 11; a++)
+  {
+    for (i32 b = -11; b < 11; b++)
+    {
+      f32   chooseMat = RANDOM_DOUBLE;
+      Point center    = (Point){.x = a + 0.9 * RANDOM_DOUBLE, 0.2, b + 0.9 * RANDOM_DOUBLE};
+
+      if (lengthVec3f32(subVec3f32(center, CREATE_VEC3f32(4.0f, 0.2, 0.0f))) > 0.9f)
+      {
+        Material sphereMaterial;
+
+        if (chooseMat < 0.8)
+        {
+
+          Color albedo        = mulVec3f32(randomVec3f32(), randomVec3f32());
+          sphereMaterial.type = LAMBERTIAN;
+          sphereMaterial.lamb = (Lambertian){.albedo = albedo};
+        }
+        else if (chooseMat < 0.95)
+        {
+          Color albedo         = mulVec3f32(randomVec3f32(), randomVec3f32());
+          f32   fuzz           = RANDOM_DOUBLE_IN_RANGE(0, 0.5);
+          sphereMaterial.type  = METAL;
+          sphereMaterial.metal = (Metal){.albedo = albedo, .fuzz = fuzz};
+        }
+        else
+        {
+          sphereMaterial.type       = DIELECTRIC;
+          sphereMaterial.dielectric = (Dielectric){.ir = 1.5f};
+        }
+        world[count].sphere.mat    = sphereMaterial;
+        world[count].type          = SPHERE;
+        world[count].sphere.center = center;
+        world[count].sphere.radius = 0.2f;
+
+        count++;
+      }
+    }
+  }
+  worldLen = count;
 
   Camera camera;
-  camera.aspectRatio = 16.0f / 9.0f;
-  camera.imageWidth  = 400;
-  camera.samples     = 10;
-  camera.vfov        = 90;
-  camera.lookfrom    = (Point){-2, 2, 1};
-  camera.lookat      = (Point){0, 0, -1};
-  camera.vUp         = (Vec3f32){0, 1, 0};
+  camera.aspectRatio  = 16.0f / 9.0f;
+  camera.imageWidth   = 1200;
+  camera.samples      = 50;
+  camera.maxDepth     = 50;
+
+  camera.vfov         = 20;
+  camera.lookfrom     = (Point){13, 2, 3};
+  camera.lookat       = (Point){0, 0, 0};
+  camera.vUp          = (Vec3f32){0, 1, 0};
+
+  camera.defocusAngle = 0.6f;
+  camera.focusDist    = 10.0f;
 
   render(&camera, world, worldLen);
 }

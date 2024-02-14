@@ -3,6 +3,7 @@
 #include <math.h>
 #include <stdio.h>
 
+
 Vec3f32 randomVec3f32()
 {
   return (Vec3f32){RANDOM_DOUBLE, RANDOM_DOUBLE, RANDOM_DOUBLE};
@@ -42,6 +43,14 @@ Vec3f32 randomVec3f32OnHemisphere(Vec3f32 normal)
   else
   {
     return CREATE_VEC3f32(-unitSphereVec.x, -unitSphereVec.y, -unitSphereVec.z);
+  }
+}
+Vec3f32 randomVec3f32InUnitDisk(){
+  while(true){
+    Vec3f32 p = (Vec3f32){RANDOM_DOUBLE_IN_RANGE(-1, 1), RANDOM_DOUBLE_IN_RANGE(-1, 1), 0};
+    if(lengthSquaredVec3f32(p) < 1){
+      return p;
+    }
   }
 }
 f32 reflectanceVec3f32(f32 cosine, f32 refIdx)

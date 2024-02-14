@@ -25,7 +25,7 @@ typedef struct Vec3f32;
 #define MAX(x, y)                        (x < y ? y : x)
 #define PI                               3.14159265358979323846 /* pi */
 
-#define DEGREES_TO_RADIANS(d)            (d * PI / 180.0)
+#define DEGREES_TO_RADIANS(d)            (d * PI / 100.0)
 #define RANDOM_DOUBLE                    rand() / (RAND_MAX + 1.0)
 #define RANDOM_DOUBLE_IN_RANGE(min, max) (min + (max - min) * RANDOM_DOUBLE)
 

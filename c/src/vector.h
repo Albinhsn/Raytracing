@@ -114,6 +114,7 @@ bool           nearZeroVec3f32(Vec3f32 v);
 Vec3f32        reflectVec3f32(Vec3f32 v, Vec3f32 n);
 Vec3f32        refractVec3f32(Vec3f32 uv, Vec3f32 n, f32 etaiOverEtat);
 f32 reflectanceVec3f32(f32 cosine, f32 refIdx);
+Vec3f32 randomVec3f32InUnitDisk();
 
 Vec3f32        randomUnitVector();
 Vec3f32        randomVec3f32OnHemisphere(Vec3f32 normal);

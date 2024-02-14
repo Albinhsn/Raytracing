@@ -134,6 +134,16 @@ Vec3f32 normalizeVec3f32(Vec3f32 v)
   return divideVec3f32(v, lengthVec3f32(v));
 }
 
+Vec3f32 refractVec3f32(Vec3f32 uv, Vec3f32 n, f32 etaiOverEtat)
+{
+  f32     cosTheta     = fmin(dotVec3f32(CREATE_VEC3f32(-uv.x, -uv.y, -uv.z), n), 1.0f);
+
+  Vec3f32 rOutPerp     = scaleVec3f32(addVec3f32(uv, scaleVec3f32(n, cosTheta)), etaiOverEtat);
+  Vec3f32 rOutParallel = scaleVec3f32(n, -sqrt(fabs(1.0 - lengthSquaredVec3f32(rOutPerp))));
+  Vec3f32 f = addVec3f32(rOutPerp, rOutParallel);
+  return f;
+}
+
 Vec3f32 reflectVec3f32(Vec3f32 v, Vec3f32 n)
 {
   return subVec3f32(v, scaleVec3f32(n, 2 * dotVec3f32(v, n)));

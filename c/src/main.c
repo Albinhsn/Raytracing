@@ -12,12 +12,10 @@ i32 main()
   srand(time(NULL));
 
   Material ground = {.type = LAMBERTIAN, .lamb = (Lambertian){.albedo = CREATE_VEC3f32(0.8f, 0.8f, 0.0f)}};
-  Material center = {.type = LAMBERTIAN, .lamb = (Lambertian){.albedo = CREATE_VEC3f32(0.7f, 0.3f, 0.3f)}};
-  Material left   = {
-        .type = METAL, .metal = (Metal){.albedo = CREATE_VEC3f32(0.8f, 0.8f, 0.8f), .fuzz = 0.3f}
-  };
-  Material right = {
-      .type = METAL, .metal = (Metal){.albedo = CREATE_VEC3f32(0.8f, 0.6f, 0.2f), .fuzz = 1.0f}
+  Material center = {.type = DIELECTRIC, .dielectric = (Dielectric){.ir = 1.5f}};
+  Material left   = {.type = DIELECTRIC, .dielectric = (Dielectric){.ir = 1.5f}};
+  Material right  = {
+       .type = METAL, .metal = (Metal){.albedo = CREATE_VEC3f32(0.8f, 0.6f, 0.2f), .fuzz = 1.0f}
   };
 
   const i32 worldLen = 4;

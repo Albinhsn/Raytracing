@@ -110,6 +110,7 @@ bool           intervalContains(Interval interval, f32 x);
 bool           intervalSurrounds(Interval interval, f32 x);
 bool nearZeroVec3f32(Vec3f32 v);
 Vec3f32 reflectVec3f32(Vec3f32 v, Vec3f32 n);
+Vec3f32 refractVec3f32(Vec3f32 uv, Vec3f32 n, f32 etaiOverEtat);
 
 Vec3f32 randomUnitVector();
 Vec3f32 randomVec3f32OnHemisphere(Vec3f32 normal);

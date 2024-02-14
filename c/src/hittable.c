@@ -1,6 +1,35 @@
 #include "hittable.h"
 #include "vector.h"
 #include <math.h>
+#include <stdio.h>
+
+bool scatterDielectric(Dielectric dielectric, Ray* rayIn, HitRecord* rec, Color* attenuation, Ray* scattered)
+{
+
+  *attenuation            = WHITE;
+  f32     refractionRatio = rec->frontFace ? 1.0f / dielectric.ir : dielectric.ir;
+
+  Vec3f32 unitDirection   = normalizeVec3f32(rayIn->dir);
+
+  f32     cosTheta        = fmin(dotVec3f32(CREATE_VEC3f32(-unitDirection.x, -unitDirection.y, -unitDirection.z), rec->normal), 1.0f);
+  f32     sinTheta        = sqrt(1.0f - cosTheta * cosTheta);
+
+  bool    cannotRefract   = refractionRatio * sinTheta > 1.0f;
+  Vec3f32 direction;
+
+  if (cannotRefract)
+  {
+    direction = reflectVec3f32(unitDirection, rec->normal);
+  }
+  else
+  {
+    direction = refractVec3f32(unitDirection, rec->normal, refractionRatio);
+  }
+
+  *scattered = (Ray){.orig = rec->p, .dir = direction};
+
+  return true;
+}
 
 bool scatterMetal(Metal metal, Ray* rayIn, HitRecord* rec, Color* attenuation, Ray* scattered)
 {
@@ -81,6 +110,7 @@ bool calculateRayIntersection(Hittable* hittableObjects, i32 length, Ray* ray, I
       {
         hit        = true;
         closestHit = rec->t;
+        rayt.min   = rec->t;
       }
       break;
     }

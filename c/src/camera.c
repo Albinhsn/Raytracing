@@ -72,7 +72,7 @@ Color rayColor(Ray* r, i32 depth, Hittable* world, i32 worldLength)
     return BLACK;
   }
   HitRecord rec;
-  if (calculateRayIntersection(world, worldLength, r, CREATE_INTERVAL(0.001, INFINITY), &rec))
+  if (calculateRayIntersection(world, worldLength, r, CREATE_INTERVAL(0.01, INFINITY), &rec))
   {
     Ray   scattered;
     Color attenuation;
@@ -87,6 +87,11 @@ Color rayColor(Ray* r, i32 depth, Hittable* world, i32 worldLength)
     case METAL:
     {
       scatter = scatterMetal(rec.mat.metal, r, &rec, &attenuation, &scattered);
+      break;
+    }
+    case DIELECTRIC:
+    {
+      scatter = scatterDielectric(rec.mat.dielectric, r, &rec, &attenuation, &scattered);
       break;
     }
     }

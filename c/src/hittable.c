@@ -1,7 +1,6 @@
 #include "hittable.h"
 #include "vector.h"
 #include <math.h>
-#include <stdio.h>
 
 bool scatterDielectric(Dielectric dielectric, Ray* rayIn, HitRecord* rec, Color* attenuation, Ray* scattered)
 {
@@ -17,7 +16,7 @@ bool scatterDielectric(Dielectric dielectric, Ray* rayIn, HitRecord* rec, Color*
   bool    cannotRefract   = refractionRatio * sinTheta > 1.0f;
   Vec3f32 direction;
 
-  if (cannotRefract)
+  if (cannotRefract || reflectanceVec3f32(cosTheta, refractionRatio) > RANDOM_DOUBLE)
   {
     direction = reflectVec3f32(unitDirection, rec->normal);
   }
@@ -77,7 +76,7 @@ bool hitSphere(Sphere* sphere, Ray* ray, Interval rayt, HitRecord* rec)
   f32 root  = (-half_b - sqrtd) / a;
   if (!intervalSurrounds(rayt, root))
   {
-    f32 root = (-half_b + sqrtd) / a;
+    root = (-half_b + sqrtd) / a;
     if (!intervalSurrounds(rayt, root))
     {
       return false;
@@ -110,7 +109,6 @@ bool calculateRayIntersection(Hittable* hittableObjects, i32 length, Ray* ray, I
       {
         hit        = true;
         closestHit = rec->t;
-        rayt.min   = rec->t;
       }
       break;
     }

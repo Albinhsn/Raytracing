@@ -43,6 +43,10 @@ i32 main()
   camera.aspectRatio = 16.0f / 9.0f;
   camera.imageWidth  = 400;
   camera.samples     = 10;
+  camera.vfov        = 90;
+  camera.lookfrom    = (Point){-2, 2, 1};
+  camera.lookat      = (Point){0, 0, -1};
+  camera.vUp         = (Vec3f32){0, 1, 0};
 
   render(&camera, world, worldLen);
 }

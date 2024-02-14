@@ -10,7 +10,7 @@ bool scatterDielectric(Dielectric dielectric, Ray* rayIn, HitRecord* rec, Color*
 
   Vec3f32 unitDirection   = normalizeVec3f32(rayIn->dir);
 
-  f32     cosTheta        = fmin(dotVec3f32(CREATE_VEC3f32(-unitDirection.x, -unitDirection.y, -unitDirection.z), rec->normal), 1.0f);
+  f32     cosTheta        = fmin(dotVec3f32(NEG_VEC3f32(unitDirection), rec->normal), 1.0f);
   f32     sinTheta        = sqrt(1.0f - cosTheta * cosTheta);
 
   bool    cannotRefract   = refractionRatio * sinTheta > 1.0f;

@@ -44,10 +44,10 @@ Vec3f32 randomVec3f32OnHemisphere(Vec3f32 normal)
     return CREATE_VEC3f32(-unitSphereVec.x, -unitSphereVec.y, -unitSphereVec.z);
   }
 }
-bool reflectanceVec3f32(f32 cosine, f32 refIdx)
+f32 reflectanceVec3f32(f32 cosine, f32 refIdx)
 {
   f32 r0 = (1 - refIdx) / (1 + refIdx);
-  r0 *= r0;
+  r0 = r0 * r0;
   return r0 + (1 - r0) * pow(1 - cosine, 5);
 }
 

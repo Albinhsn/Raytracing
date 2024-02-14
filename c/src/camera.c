@@ -2,6 +2,7 @@
 #include "common.h"
 #include "hittable.h"
 #include "vector.h"
+#include <math.h>
 #include <stdio.h>
 
 Vec3 pixelSampleSquare(Vec3 pixelDeltaU, Vec3 pixelDeltaV)
@@ -50,18 +51,25 @@ void initializeCamera(struct Camera* camera)
   camera->imageHeight    = camera->imageHeight < 1 ? 1 : camera->imageHeight;
   camera->maxDepth       = 50;
 
-  f32 focalLength        = 1.0f;
-  f32 viewportHeight     = 2.0f;
-  f32 viewportWidth      = viewportHeight * ((f32)camera->imageWidth / camera->imageHeight);
-  camera->center         = CREATE_VEC3f32(0.0f, 0.0f, 0.0f);
+  camera->center         = camera->lookfrom;
 
-  Vec3 viewportU         = CREATE_VEC3f32(viewportWidth, 0.0f, 0.0f);
-  Vec3 viewportV         = CREATE_VEC3f32(0.0f, -viewportHeight, 0.0f);
+  f32 focalLength        = lengthVec3f32(subVec3f32(camera->lookfrom, camera->lookat));
+  f32 theta              = DEGREES_TO_RADIANS(camera->vfov);
+  f32 h                  = tan(theta / 2);
+  f32 viewportHeight     = 2.0f * h * focalLength;
+  f32 viewportWidth      = viewportHeight * ((f32)camera->imageWidth / camera->imageHeight);
+
+  camera->w              = normalizeVec3f32(subVec3f32(camera->lookfrom, camera->lookat));
+  camera->u              = normalizeVec3f32(crossVec3f32(camera->vUp, camera->w));
+  camera->v              = crossVec3f32(camera->w, camera->u);
+
+  Vec3 viewportU         = scaleVec3f32(camera->u, viewportWidth);
+  Vec3 viewportV         = scaleVec3f32(CREATE_VEC3f32(-camera->v.x, -camera->v.y, -camera->v.z), viewportHeight);
 
   camera->pixelDeltaU    = divideVec3f32(viewportU, camera->imageWidth);
   camera->pixelDeltaV    = divideVec3f32(viewportV, camera->imageHeight);
 
-  Vec3 viewportUpperLeft = subVec3f32(subVec3f32(subVec3f32(camera->center, CREATE_VEC3f32(0.0f, 0.0f, focalLength)), divideVec3f32(viewportU, 2.0f)), divideVec3f32(viewportV, 2.0f));
+  Vec3 viewportUpperLeft = subVec3f32(subVec3f32(subVec3f32(camera->center, scaleVec3f32(camera->w, focalLength)), divideVec3f32(viewportU, 2.0f)), divideVec3f32(viewportV, 2.0f));
 
   camera->pixel00Loc     = addVec3f32(viewportUpperLeft, scaleVec3f32(addVec3f32(camera->pixelDeltaU, camera->pixelDeltaV), 0.5f));
 }

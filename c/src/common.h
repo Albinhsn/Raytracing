@@ -29,6 +29,7 @@ typedef struct Vec3f32;
 #define RANDOM_DOUBLE                    rand() / (RAND_MAX + 1.0)
 #define RANDOM_DOUBLE_IN_RANGE(min, max) (min + (max - min) * RANDOM_DOUBLE)
 
+
 #define LINEAR_TO_GAMMA(x)               sqrt(x)
 
 #define RED                              ((struct Vec3f32){1.0f, 0, 0})
@@ -36,7 +37,7 @@ typedef struct Vec3f32;
 #define GREEN                            ((struct Vec3f32){0, 1.0f, 0})
 #define CYAN                             ((struct Vec3f32){0, 1.0f, 1.0f})
 #define PURPLE                           ((struct Vec3f32){1.0f, 0, 1.0f})
-#define BLUE                             ((struct Vec3f32){1.0f, 0, 0})
+#define BLUE                             ((struct Vec3f32){0.0f, 0, 1.0f})
 #define WHITE                            ((struct Vec3f32){1.0f, 1.0f, 1.0f})
 #define BLACK                            ((struct Vec3f32){0, 0, 0})
 #define SOMEBLUE                         ((struct Vec3f32){0.5f, 0.7f, 1.0f})

@@ -109,6 +109,11 @@ typedef struct Vec2f32 Interval;
 bool           intervalContains(Interval interval, f32 x);
 bool           intervalSurrounds(Interval interval, f32 x);
 
+Vec3f32 randomUnitVector();
+Vec3f32 randomVec3f32OnHemisphere(Vec3f32 normal);
+Vec3f32 randomVec3f32InUnitSphere();
+Vec3f32 randomVec3f32();
+Vec3f32 randomVec3f32WithinRange(f32 min, f32 max);
 struct Vec3f32 scaleVec3f32(struct Vec3f32 v, f32 t);
 struct Vec3f32 addVec3f32(struct Vec3f32 v0, struct Vec3f32 v1);
 struct Vec3f32 subVec3f32(struct Vec3f32 v0, struct Vec3f32 v1);

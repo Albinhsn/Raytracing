@@ -16,7 +16,7 @@ Ray getRay(Camera* camera, i32 x, i32 y)
   Point pixelCenter  = addVec3f32(addVec3f32(camera->pixel00Loc, scaleVec3f32(camera->pixelDeltaU, x)), scaleVec3f32(camera->pixelDeltaV, y));
   Point pixelSample  = addVec3f32(pixelCenter, pixelSampleSquare(camera->pixelDeltaU, camera->pixelDeltaV));
 
-  Vec3  rayDirection = subVec3f32(pixelCenter, camera->center);
+  Vec3  rayDirection = subVec3f32(pixelSample, camera->center);
   Ray   r            = {.orig = camera->center, .dir = rayDirection};
   return r;
 }
@@ -29,14 +29,14 @@ void render(Camera* camera, Hittable* world, i32 worldLen)
 
   for (i32 y = 0; y < camera->imageHeight; y++)
   {
-    fprintf(stderr, "\rScanlines remaining: %d", (camera->imageHeight - y));
+    fprintf(stderr, "\rScanlines remaining: %d   ", (camera->imageHeight - y));
     for (i32 x = 0; x < camera->imageWidth; x++)
     {
       Color pixelColor = BLACK;
       for (i32 sample = 0; sample < camera->samples; sample++)
       {
         Ray r      = getRay(camera, x, y);
-        pixelColor = addVec3f32(pixelColor, rayColor(&r, world, worldLen));
+        pixelColor = addVec3f32(pixelColor, rayColor(&r, camera->maxDepth, world, worldLen));
       }
       writeColor(pixelColor, camera->samples);
     }
@@ -47,6 +47,7 @@ void initializeCamera(struct Camera* camera)
 {
   camera->imageHeight    = camera->imageWidth / camera->aspectRatio;
   camera->imageHeight    = camera->imageHeight < 1 ? 1 : camera->imageHeight;
+  camera->maxDepth       = 50;
 
   f32 focalLength        = 1.0f;
   f32 viewportHeight     = 2.0f;
@@ -63,12 +64,18 @@ void initializeCamera(struct Camera* camera)
 
   camera->pixel00Loc     = addVec3f32(viewportUpperLeft, scaleVec3f32(addVec3f32(camera->pixelDeltaU, camera->pixelDeltaV), 0.5f));
 }
-Color rayColor(Ray* r, Hittable* world, i32 worldLength)
+Color rayColor(Ray* r, i32 maxDepth, Hittable* world, i32 worldLength)
 {
-  HitRecord rec;
-  if (calculateRayIntersection(world, worldLength, r, CREATE_INTERVAL(0, INFINITY), &rec))
+  if (maxDepth <= 0)
   {
-    return scaleVec3f32(addVec3f32(rec.normal, CREATE_VEC3f32(1.0f, 1.0f, 1.0f)), 0.5f);
+    return BLACK;
+  }
+  HitRecord rec;
+  if (calculateRayIntersection(world, worldLength, r, CREATE_INTERVAL(0.001, INFINITY), &rec))
+  {
+    Vec3f32 direction = addVec3f32(rec.normal, randomUnitVector());
+    Ray     newRay    = {.dir = direction, .orig = rec.p};
+    return scaleVec3f32(rayColor(&newRay, maxDepth - 1, world, worldLength), 0.5f);
   }
 
   Vec3 unitDirection = normalizeVec3f32(r->dir);

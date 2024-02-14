@@ -1,6 +1,50 @@
 #include "vector.h"
+#include "common.h"
 #include <math.h>
 #include <stdio.h>
+
+Vec3f32 randomVec3f32()
+{
+  return (Vec3f32){RANDOM_DOUBLE, RANDOM_DOUBLE, RANDOM_DOUBLE};
+}
+Vec3f32 randomVec3f32InRange(f32 min, f32 max)
+{
+  return (Vec3f32){
+      RANDOM_DOUBLE_IN_RANGE(min, max), //
+      RANDOM_DOUBLE_IN_RANGE(min, max), //
+      RANDOM_DOUBLE_IN_RANGE(min, max)  //
+  };
+}
+
+Vec3f32 randomVec3f32InUnitSphere()
+{
+  while (true)
+  {
+    Vec3 p = randomVec3f32InRange(-1, 1);
+    if (lengthSquaredVec3f32(p) < 1)
+    {
+      return p;
+    }
+  }
+}
+Vec3f32 randomUnitVector()
+{
+  return normalizeVec3f32(randomVec3f32InUnitSphere());
+}
+
+Vec3f32 randomVec3f32OnHemisphere(Vec3f32 normal)
+{
+  Vec3f32 unitSphereVec = randomUnitVector();
+  if (dotVec3f32(unitSphereVec, normal) > 0.0)
+  {
+    return unitSphereVec;
+  }
+  else
+  {
+    return CREATE_VEC3f32(-unitSphereVec.x, -unitSphereVec.y, -unitSphereVec.z);
+  }
+}
+
 bool intervalContains(Interval i, f32 x)
 {
   return i.min <= x && x <= i.max;
@@ -89,6 +133,7 @@ Vec3f32 normalizeVec3f32(Vec3f32 v)
 {
   return divideVec3f32(v, lengthVec3f32(v));
 }
+
 void writeColor(Color v, i32 samples)
 {
   f32 r     = v.x;
@@ -99,6 +144,10 @@ void writeColor(Color v, i32 samples)
   r *= scale;
   g *= scale;
   b *= scale;
+
+  r = LINEAR_TO_GAMMA(r);
+  g = LINEAR_TO_GAMMA(g);
+  b = LINEAR_TO_GAMMA(b);
 
   Interval i = CREATE_INTERVAL(0.0, 0.999f);
 

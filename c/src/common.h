@@ -1,6 +1,7 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#include <math.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -26,7 +27,9 @@ typedef struct Vec3f32;
 
 #define DEGREES_TO_RADIANS(d)            (d * PI / 180.0)
 #define RANDOM_DOUBLE                    rand() / (RAND_MAX + 1.0)
-#define RANDOM_DOUBLE_IN_RANGE(min, max) (min + (max - min) * RANDOM_DOUBLE())
+#define RANDOM_DOUBLE_IN_RANGE(min, max) (min + (max - min) * RANDOM_DOUBLE)
+
+#define LINEAR_TO_GAMMA(x)               sqrt(x)
 
 #define RED                              ((struct Vec3f32){1.0f, 0, 0})
 #define YELLOW                           ((struct Vec3f32){1.0f, 1.0f, 0})

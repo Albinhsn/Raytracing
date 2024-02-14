@@ -134,6 +134,17 @@ Vec3f32 normalizeVec3f32(Vec3f32 v)
   return divideVec3f32(v, lengthVec3f32(v));
 }
 
+Vec3f32 reflectVec3f32(Vec3f32 v, Vec3f32 n)
+{
+  return subVec3f32(v, scaleVec3f32(n, 2 * dotVec3f32(v, n)));
+}
+
+bool nearZeroVec3f32(Vec3f32 v)
+{
+  f32 s = 1e-8;
+  return fabs(v.x) < s && fabs(v.y) < s && fabs(v.z) < s;
+}
+
 void writeColor(Color v, i32 samples)
 {
   f32 r     = v.x;
@@ -145,9 +156,9 @@ void writeColor(Color v, i32 samples)
   g *= scale;
   b *= scale;
 
-  r = LINEAR_TO_GAMMA(r);
-  g = LINEAR_TO_GAMMA(g);
-  b = LINEAR_TO_GAMMA(b);
+  r          = LINEAR_TO_GAMMA(r);
+  g          = LINEAR_TO_GAMMA(g);
+  b          = LINEAR_TO_GAMMA(b);
 
   Interval i = CREATE_INTERVAL(0.0, 0.999f);
 

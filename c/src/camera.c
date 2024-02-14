@@ -1,5 +1,6 @@
 #include "camera.h"
 #include "common.h"
+#include "hittable.h"
 #include "vector.h"
 #include <stdio.h>
 
@@ -64,18 +65,36 @@ void initializeCamera(struct Camera* camera)
 
   camera->pixel00Loc     = addVec3f32(viewportUpperLeft, scaleVec3f32(addVec3f32(camera->pixelDeltaU, camera->pixelDeltaV), 0.5f));
 }
-Color rayColor(Ray* r, i32 maxDepth, Hittable* world, i32 worldLength)
+Color rayColor(Ray* r, i32 depth, Hittable* world, i32 worldLength)
 {
-  if (maxDepth <= 0)
+  if (depth <= 0)
   {
     return BLACK;
   }
   HitRecord rec;
   if (calculateRayIntersection(world, worldLength, r, CREATE_INTERVAL(0.001, INFINITY), &rec))
   {
-    Vec3f32 direction = addVec3f32(rec.normal, randomUnitVector());
-    Ray     newRay    = {.dir = direction, .orig = rec.p};
-    return scaleVec3f32(rayColor(&newRay, maxDepth - 1, world, worldLength), 0.5f);
+    Ray   scattered;
+    Color attenuation;
+    bool  scatter;
+    switch (rec.mat.type)
+    {
+    case LAMBERTIAN:
+    {
+      scatter = scatterLambertian(rec.mat.lamb, &rec, &attenuation, &scattered);
+      break;
+    }
+    case METAL:
+    {
+      scatter = scatterMetal(rec.mat.metal, r, &rec, &attenuation, &scattered);
+      break;
+    }
+    }
+    if (scatter)
+    {
+      return mulVec3f32(attenuation, rayColor(&scattered, depth - 1, world, worldLength));
+    }
+    return BLACK;
   }
 
   Vec3 unitDirection = normalizeVec3f32(r->dir);

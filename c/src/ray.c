@@ -1,8 +1,12 @@
 #include "ray.h"
 #include "vector.h"
-#include <stdio.h>
 
 Point rayAt(Ray* ray, f32 t)
 {
-  return addVec3f32(ray->orig, scaleVec3f32(ray->dir, t));
+  Vec3 scaledDir;
+  scaleVec3f32(&scaledDir, &ray->dir, t);
+  Point res;
+  addVec3f32(&res, &ray->orig, &scaledDir);
+
+  return res;
 }

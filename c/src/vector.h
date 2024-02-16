@@ -9,7 +9,7 @@
 #define CREATE_VEC3f32(x, y, z)    ((struct Vec3f32){x, y, z})
 #define CREATE_VEC2f32(x, y)       ((struct Vec2f32){x, y})
 #define CREATE_INTERVAL(x, y)      CREATE_VEC2f32(x, y)
-#define NEG_VEC3f32(vec)    (CREATE_VEC3f32(-vec.x, -vec.y, -vec.z))
+#define NEG_VEC3f32(vec)           (CREATE_VEC3f32(-vec.x, -vec.y, -vec.z))
 
 struct Vec2f32
 {
@@ -105,33 +105,34 @@ typedef struct Vec3f32 Vec3f32;
 typedef struct Vec3f32 Vec3;
 typedef struct Vec2f32 Interval;
 
-#define EMPTY_INTERVAL    ((Interval)(INFINITY, -INFINITY))
-#define UNIVERSE_INTERVAL ((Interval)(-INFINITY, INFINITY))
+#define EMPTY_INTERVAL           ((Interval)(INFINITY, -INFINITY))
+#define UNIVERSE_INTERVAL        ((Interval)(-INFINITY, INFINITY))
 
-bool           intervalContains(Interval interval, f32 x);
-bool           intervalSurrounds(Interval interval, f32 x);
-bool           nearZeroVec3f32(Vec3f32 v);
-Vec3f32        reflectVec3f32(Vec3f32 v, Vec3f32 n);
-Vec3f32        refractVec3f32(Vec3f32 uv, Vec3f32 n, f32 etaiOverEtat);
-f32 reflectanceVec3f32(f32 cosine, f32 refIdx);
+#define INTERVAL_CONTAINS(i, x)  ((i.min <= x && x <= i.max))
+#define INTERVAL_SURROUNDS(i, x) ((i.min < x && x < i.max))
+
+bool nearZeroVec3f32(Vec3f32 v);
+void    reflectVec3f32(Vec3f32* res, Vec3f32* v, Vec3f32* n);
+void    refractVec3f32(Vec3f32* res, Vec3f32* uv, Vec3f32* n, f32 etaiOverEtat);
+f32     reflectanceVec3f32(f32 cosine, f32 refIdx);
 Vec3f32 randomVec3f32InUnitDisk();
 
-Vec3f32        randomUnitVector();
-Vec3f32        randomVec3f32OnHemisphere(Vec3f32 normal);
-Vec3f32        randomVec3f32InUnitSphere();
-Vec3f32        randomVec3f32();
-Vec3f32        randomVec3f32WithinRange(f32 min, f32 max);
-struct Vec3f32 scaleVec3f32(struct Vec3f32 v, f32 t);
-struct Vec3f32 addVec3f32(struct Vec3f32 v0, struct Vec3f32 v1);
-struct Vec3f32 subVec3f32(struct Vec3f32 v0, struct Vec3f32 v1);
-struct Vec3f32 mulVec3f32(struct Vec3f32 v0, struct Vec3f32 v1);
-struct Vec3f32 divideVec3f32(struct Vec3f32 v, f32 t);
-f32            lengthVec3f32(struct Vec3f32 v);
-f32            lengthSquaredVec3f32(struct Vec3f32 v);
-f32            dotVec3f32(struct Vec3f32 v0, struct Vec3f32 v1);
-struct Vec3f32 crossVec3f32(struct Vec3f32 v0, struct Vec3f32 v1);
-struct Vec3f32 normalizeVec3f32(struct Vec3f32 v);
-void           debugVec3f32(struct Vec3f32 v);
-void           writeColor(Color v, i32 samples);
+Vec3f32 randomUnitVector();
+Vec3f32 randomVec3f32OnHemisphere(Vec3f32 normal);
+Vec3f32 randomVec3f32InUnitSphere();
+Vec3f32 randomVec3f32();
+Vec3f32 randomVec3f32WithinRange(f32 min, f32 max);
+void    scaleVec3f32(Vec3f32* res, Vec3f32* v, f32 t);
+void    addVec3f32(Vec3f32* res, Vec3f32* v0, Vec3f32* v1);
+void    subVec3f32(Vec3f32* res, Vec3f32* v0, Vec3f32* v1);
+void    mulVec3f32(Vec3f32* res, Vec3f32* v0, Vec3f32* v1);
+void    divideVec3f32(Vec3f32* res, Vec3f32* v0, Vec3f32* v1);
+f32     lengthVec3f32(Vec3f32* v);
+f32     lengthSquaredVec3f32(Vec3f32* v);
+f32     dotVec3f32(Vec3f32* v0, Vec3f32* v1);
+void    crossVec3f32(Vec3f32* res, Vec3f32* v0, Vec3f32* v1);
+void    normalizeVec3f32(Vec3f32* res, Vec3f32* v);
+void    debugVec3f32(struct Vec3f32 v);
+void    writeColor(Color v, i32 samples);
 
 #endif

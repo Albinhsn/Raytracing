@@ -3,33 +3,99 @@
 #include "hittable.h"
 #include "vector.h"
 #include <math.h>
+#include <pthread.h>
 #include <stdio.h>
+#include <string.h>
 
-Vec3 pixelSampleSquare(Vec3 pixelDeltaU, Vec3 pixelDeltaV)
+void pixelSampleSquare(Vec3* res, Vec3* pixelDeltaU, Vec3* pixelDeltaV)
 {
-  f32 px = -0.5f + RANDOM_DOUBLE;
-  f32 py = -0.5f + RANDOM_DOUBLE;
+  f32     px = -0.5f + RANDOM_DOUBLE;
+  f32     py = -0.5f + RANDOM_DOUBLE;
 
-  return addVec3f32(scaleVec3f32(pixelDeltaU, px), scaleVec3f32(pixelDeltaV, py));
+  Vec3f32 scaledU;
+  scaleVec3f32(&scaledU, pixelDeltaU, px);
+
+  Vec3f32 scaledV;
+  scaleVec3f32(&scaledV, pixelDeltaV, py);
+
+  addVec3f32(res, &scaledU, &scaledV);
 }
 
 Point defocusDiskSample(Camera* camera)
 {
-  Point p = randomVec3f32InUnitDisk();
-  p       = (Vec3){-0.184263, -0.528258, 0.0};
-  return addVec3f32(camera->center, addVec3f32(scaleVec3f32(camera->defocusDiskU, p.x), scaleVec3f32(camera->defocusDiskV, p.y)));
+  Point   p = randomVec3f32InUnitDisk();
+  Vec3f32 scaledDiskU;
+  scaleVec3f32(&scaledDiskU, &camera->defocusDiskU, p.x);
+
+  Vec3f32 scaledDiskV;
+  scaleVec3f32(&scaledDiskV, &camera->defocusDiskV, p.y);
+
+  Vec3f32 diskSum;
+  addVec3f32(&diskSum, &scaledDiskU, &scaledDiskV);
+
+  Vec3f32 res;
+  addVec3f32(&res, &camera->center, &diskSum);
+  return res;
 }
 
 Ray getRay(Camera* camera, i32 x, i32 y)
 {
-  Point   pixelCenter  = addVec3f32(addVec3f32(camera->pixel00Loc, scaleVec3f32(camera->pixelDeltaU, x)), scaleVec3f32(camera->pixelDeltaV, y));
-  Point   pixelSample  = addVec3f32(pixelCenter, pixelSampleSquare(camera->pixelDeltaU, camera->pixelDeltaV));
+  Vec3f32 scaledDeltaV;
+  scaleVec3f32(&scaledDeltaV, &camera->pixelDeltaV, y);
 
-  Vec3f32 rayOrigin    = camera->defocusAngle <= 0 ? camera->center : defocusDiskSample(camera);
-  Vec3    rayDirection = subVec3f32(pixelSample, rayOrigin);
+  Vec3f32 scaledDeltaU;
+  scaleVec3f32(&scaledDeltaU, &camera->pixelDeltaU, x);
+
+  Vec3f32 pixelDelta;
+  addVec3f32(&pixelDelta, &camera->pixel00Loc, &scaledDeltaU);
+
+  Point pixelCenter;
+  addVec3f32(&pixelCenter, &pixelDelta, &scaledDeltaV);
+
+  Point   pixelSample;
+  Vec3f32 deltaSquared;
+  pixelSampleSquare(&deltaSquared, &camera->pixelDeltaU, &camera->pixelDeltaV);
+
+  addVec3f32(&pixelSample, &pixelCenter, &deltaSquared);
+
+  Vec3f32 rayOrigin = camera->defocusAngle <= 0 ? camera->center : defocusDiskSample(camera);
+  Vec3    rayDirection;
+  subVec3f32(&rayDirection, &pixelSample, &rayOrigin);
 
   return (Ray){.orig = rayOrigin, .dir = rayDirection};
 }
+
+struct GatherColorArgs
+{
+  u32       samples;
+  u32       y;
+  u32       minX;
+  u32       maxX;
+  Color*    res;
+  Camera*   camera;
+  Hittable* world;
+  u32       worldLen;
+};
+typedef struct GatherColorArgs GatherColorArgs;
+
+void*                          gatherColors(void* arg)
+{
+  GatherColorArgs* args   = (GatherColorArgs*)arg;
+  Camera*          camera = args->camera;
+  for (u32 x = args->minX; x < args->maxX; x++)
+  {
+    for (u32 sample = 0; sample < args->samples; sample++)
+    {
+      Ray    r           = getRay(camera, x, args->y);
+      Vec3   newRayColor = rayColor(&r, camera->maxDepth, args->world, args->worldLen);
+      Color* a           = &args->res[x];
+      addVec3f32(a, a, &newRayColor);
+    }
+  }
+  return 0;
+}
+
+#define nmbrOfThreads 10
 
 void render(Camera* camera, Hittable* world, i32 worldLen)
 {
@@ -37,18 +103,53 @@ void render(Camera* camera, Hittable* world, i32 worldLen)
 
   printf("P3\n%d %d\n255\n", camera->imageWidth, camera->imageHeight);
 
+  u32             samples = camera->samples;
+  u32             xDiff   = camera->imageWidth / nmbrOfThreads;
+
+  Color           cols[camera->imageWidth];
+
+  pthread_t       threadIds[nmbrOfThreads];
+  GatherColorArgs args[nmbrOfThreads];
+  for (i32 i = 0; i < nmbrOfThreads; i++)
+  {
+    args[i].camera   = camera;
+    args[i].samples  = samples;
+    args[i].minX     = xDiff * i;
+    args[i].maxX     = xDiff * (i + 1);
+    args[i].world    = world;
+    args[i].worldLen = worldLen;
+    args[i].res      = cols;
+
+    threadIds[i]     = i;
+  }
+
   for (i32 y = 0; y < camera->imageHeight; y++)
   {
     fprintf(stderr, "\rScanlines remaining: %d   ", (camera->imageHeight - y));
-    for (i32 x = 0; x < camera->imageWidth; x++)
+    for (i32 i = 0; i < camera->imageWidth; i++)
     {
-      Color pixelColor = BLACK;
-      for (i32 sample = 0; sample < camera->samples; sample++)
+      cols[i].r = 0.0f;
+      cols[i].g = 0.0f;
+      cols[i].b = 0.0f;
+    }
+    for (i32 i = 0; i < nmbrOfThreads; i++)
+    {
+      args[i].y = y;
+      pthread_create(&threadIds[i], NULL, gatherColors, (void*)&args[i]);
+    }
+
+    for (i32 i = 0; i < nmbrOfThreads; i++)
+    {
+      if (pthread_join(threadIds[i], NULL) != 0)
       {
-        Ray r      = getRay(camera, x, y);
-        pixelColor = addVec3f32(pixelColor, rayColor(&r, camera->maxDepth, world, worldLen));
+        printf("Failed to join?\n");
+        exit(2);
       }
-      writeColor(pixelColor, camera->samples);
+    }
+
+    for (i32 i = 0; i < camera->imageWidth; i++)
+    {
+      writeColor(cols[i], camera->samples);
     }
   }
   fprintf(stderr, "\rDone                                 \n");
@@ -60,29 +161,60 @@ void initializeCamera(struct Camera* camera)
 
   camera->center         = camera->lookfrom;
 
-  f32 theta              = DEGREES_TO_RADIANS(camera->vfov);
-  f32 h                  = tan(theta / 2);
-  f32 viewportHeight     = 2.0f * h * camera->focusDist;
-  f32 viewportWidth      = viewportHeight * ((f32)camera->imageWidth / camera->imageHeight);
+  f32     theta          = DEGREES_TO_RADIANS(camera->vfov);
+  f32     h              = tan(theta / 2);
+  f32     viewportHeight = 2.0f * h * camera->focusDist;
+  f32     viewportWidth  = viewportHeight * ((f32)camera->imageWidth / camera->imageHeight);
 
-  camera->w              = normalizeVec3f32(subVec3f32(camera->lookfrom, camera->lookat));
-  camera->u              = normalizeVec3f32(crossVec3f32(camera->vUp, camera->w));
-  camera->v              = crossVec3f32(camera->w, camera->u);
+  Vec3f32 res;
+  subVec3f32(&res, &camera->lookfrom, &camera->lookat);
+  normalizeVec3f32(&camera->w, &res);
 
-  Vec3 viewportU         = scaleVec3f32(camera->u, viewportWidth);
-  Vec3 viewportV         = scaleVec3f32(CREATE_VEC3f32(-camera->v.x, -camera->v.y, -camera->v.z), viewportHeight);
+  Vec3f32 crossCam;
+  crossVec3f32(&crossCam, &camera->vUp, &camera->w);
+  normalizeVec3f32(&camera->u, &crossCam);
 
-  camera->pixelDeltaU    = divideVec3f32(viewportU, camera->imageWidth);
-  camera->pixelDeltaV    = divideVec3f32(viewportV, camera->imageHeight);
+  crossVec3f32(&camera->v, &camera->w, &camera->u);
 
-  Vec3 viewportUpperLeft = subVec3f32(subVec3f32(subVec3f32(camera->center, scaleVec3f32(camera->w, camera->focusDist)), divideVec3f32(viewportU, 2.0f)), divideVec3f32(viewportV, 2.0f));
+  Vec3 viewportU;
+  scaleVec3f32(&viewportU, &camera->u, viewportWidth);
 
-  camera->pixel00Loc     = addVec3f32(viewportUpperLeft, scaleVec3f32(addVec3f32(camera->pixelDeltaU, camera->pixelDeltaV), 0.5f));
+  Vec3 viewportV;
+  Vec3 negCamV = NEG_VEC3f32(camera->v);
+  scaleVec3f32(&viewportV, &negCamV, viewportHeight);
 
-  f32 defocusRadius      = camera->focusDist * tan(DEGREES_TO_RADIANS(camera->defocusAngle / 2));
+  scaleVec3f32(&camera->pixelDeltaU, &viewportU, 1.0 / (f32)camera->imageWidth);
+  scaleVec3f32(&camera->pixelDeltaV, &viewportV, 1.0 / (f32)camera->imageHeight);
 
-  camera->defocusDiskU   = scaleVec3f32(camera->u, defocusRadius);
-  camera->defocusDiskV   = scaleVec3f32(camera->v, defocusRadius);
+  Vec3 scaledViewportV;
+  scaleVec3f32(&scaledViewportV, &viewportV, 1.0f / 2.0f);
+
+  Vec3 scaledViewportU;
+  scaleVec3f32(&scaledViewportU, &viewportU, 1.0f / 2.0f);
+
+  Vec3 scaledCamW;
+  scaleVec3f32(&scaledCamW, &camera->w, camera->focusDist);
+
+  Vec3 v0;
+  subVec3f32(&v0, &camera->center, &scaledCamW);
+
+  Vec3 v1;
+  subVec3f32(&v1, &v0, &scaledViewportU);
+
+  Vec3 viewportUpperLeft;
+  subVec3f32(&viewportUpperLeft, &v1, &scaledViewportV);
+
+  Vec3 camSum;
+  addVec3f32(&camSum, &camera->pixelDeltaU, &camera->pixelDeltaV);
+
+  Vec3 scaledCamSum;
+  scaleVec3f32(&scaledCamSum, &camSum, 0.5f);
+  addVec3f32(&camera->pixel00Loc, &viewportUpperLeft, &scaledCamSum);
+
+  f32 defocusRadius = camera->focusDist * tan(DEGREES_TO_RADIANS(camera->defocusAngle / 2));
+
+  scaleVec3f32(&camera->defocusDiskU, &camera->u, defocusRadius);
+  scaleVec3f32(&camera->defocusDiskV, &camera->v, defocusRadius);
 }
 Color rayColor(Ray* r, i32 depth, Hittable* world, i32 worldLength)
 {
@@ -113,15 +245,33 @@ Color rayColor(Ray* r, i32 depth, Hittable* world, i32 worldLength)
       scatter = scatterDielectric(rec.mat.dielectric, r, &rec, &attenuation, &scattered);
       break;
     }
+    default:
+    {
+      scatter = false;
+    }
     }
     if (scatter)
     {
-      return mulVec3f32(attenuation, rayColor(&scattered, depth - 1, world, worldLength));
+      Vec3f32 res;
+      Vec3f32 rayC = rayColor(&scattered, depth - 1, world, worldLength);
+      mulVec3f32(&res, &attenuation, &rayC);
+      return res;
     }
     return BLACK;
   }
 
-  Vec3 unitDirection = normalizeVec3f32(r->dir);
-  f32  a             = 0.5 * (unitDirection.y + 1.0f);
-  return addVec3f32(scaleVec3f32(WHITE, (1.0 - a)), scaleVec3f32(SOMEBLUE, a));
+  Vec3 unitDirection;
+  normalizeVec3f32(&unitDirection, &r->dir);
+
+  f32  a = 0.5 * (unitDirection.y + 1.0f);
+
+  Vec3 backgroundColor;
+  scaleVec3f32(&backgroundColor, &SOMEBLUE, a);
+
+  Vec3 intColor;
+  scaleVec3f32(&intColor, &WHITE, (1.0 - a));
+  Vec3 res;
+  addVec3f32(&res, &intColor, &backgroundColor);
+
+  return res;
 }

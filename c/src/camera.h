@@ -13,23 +13,22 @@ struct Camera
   i32     maxDepth;
   Point   center;
   Point   pixel00Loc;
-  Vec3    pixelDeltaU;
-  Vec3    pixelDeltaV;
+  Vec3f32 pixelDeltaU;
+  Vec3f32 pixelDeltaV;
   u32     samples;
   f32     vfov;
   Point   lookfrom;
   Point   lookat;
   Vec3f32 vUp;
-  Vec3    u, v, w;
+  Vec3f32 u, v, w;
   f32     defocusAngle;
   f32     focusDist;
-  Vec3    defocusDiskU;
-  Vec3    defocusDiskV;
+  Vec3f32 defocusDiskU;
+  Vec3f32 defocusDiskV;
 };
-typedef struct Camera Camera;
 
-void                  render(Camera* camera, Hittable* world, i32 worldLen);
-void                  initializeCamera(Camera* camera);
-Color                 rayColor(Ray* r, i32 maxDepth, Hittable* world, i32 worldLength);
+void  render(Camera* camera, Hittable* world, i32 worldLen);
+void  initializeCamera(Camera* camera);
+Color rayColor(Ray* r, i32 maxDepth, Hittable* world, i32 worldLength);
 
 #endif

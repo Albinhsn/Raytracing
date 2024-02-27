@@ -47,7 +47,7 @@ typedef struct Material Material;
 struct HitRecord
 {
   Point    p;
-  Vec3     normal;
+  Vec3f32  normal;
   Material mat;
   f32      t;
   bool     frontFace;

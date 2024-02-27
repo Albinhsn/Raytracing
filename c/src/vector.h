@@ -4,6 +4,7 @@
 #include "common.h"
 #include <math.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 #define CREATE_VEC4f32(x, y, z, w) ((struct Vec4f32){x, y, z, w})
 #define CREATE_VEC3f32(x, y, z)    ((struct Vec3f32){x, y, z})
@@ -101,8 +102,6 @@ struct Matrix3x3
 
 typedef struct Vec3f32 Point;
 typedef struct Vec3f32 Color;
-typedef struct Vec3f32 Vec3f32;
-typedef struct Vec3f32 Vec3;
 typedef struct Vec2f32 Interval;
 
 #define EMPTY_INTERVAL           ((Interval)(INFINITY, -INFINITY))
@@ -111,7 +110,7 @@ typedef struct Vec2f32 Interval;
 #define INTERVAL_CONTAINS(i, x)  ((i.min <= x && x <= i.max))
 #define INTERVAL_SURROUNDS(i, x) ((i.min < x && x < i.max))
 
-bool nearZeroVec3f32(Vec3f32 v);
+bool    nearZeroVec3f32(Vec3f32 v);
 void    reflectVec3f32(Vec3f32* res, Vec3f32* v, Vec3f32* n);
 void    refractVec3f32(Vec3f32* res, Vec3f32* uv, Vec3f32* n, f32 etaiOverEtat);
 f32     reflectanceVec3f32(f32 cosine, f32 refIdx);
@@ -133,6 +132,6 @@ f32     dotVec3f32(Vec3f32* v0, Vec3f32* v1);
 void    crossVec3f32(Vec3f32* res, Vec3f32* v0, Vec3f32* v1);
 void    normalizeVec3f32(Vec3f32* res, Vec3f32* v);
 void    debugVec3f32(struct Vec3f32 v);
-void    writeColor(Color v, i32 samples);
+void    writeColor(FILE* filePtr, Color v, i32 samples);
 
 #endif

@@ -47,8 +47,8 @@ bool scatterMetal(Metal metal, Ray* rayIn, HitRecord* rec, Color* attenuation, R
   Vec3f32 dir;
   addVec3f32(&dir, &reflected, &fuzzedUnit);
   *scattered = (Ray){
-      .dir  = dir,   //
-      .orig = rec->p //
+      .orig = rec->p, //
+      .dir  = dir     //
   };
   *attenuation = metal.albedo;
   return dotVec3f32(&scattered->dir, &rec->normal) > 0;
@@ -67,7 +67,7 @@ inline bool scatterLambertian(Lambertian lambertian, HitRecord* rec, Color* atte
   return true;
 }
 
-static inline void calculateFaceNormal(HitRecord* record, Ray* ray, Vec3 outwardNormal)
+static inline void calculateFaceNormal(HitRecord* record, Ray* ray, Vec3f32 outwardNormal)
 {
   record->frontFace = dotVec3f32(&ray->dir, &outwardNormal) < 0;
   record->normal    = record->frontFace ? outwardNormal : CREATE_VEC3f32(-outwardNormal.x, -outwardNormal.y, -outwardNormal.z);
@@ -75,7 +75,7 @@ static inline void calculateFaceNormal(HitRecord* record, Ray* ray, Vec3 outward
 
 bool hitSphere(Sphere* sphere, Ray* ray, Interval rayt, HitRecord* rec)
 {
-  Vec3 oc;
+  Vec3f32 oc;
   subVec3f32(&oc, &ray->orig, &sphere->center);
 
   f32 half_b       = dotVec3f32(&oc, &ray->dir);
@@ -105,10 +105,10 @@ bool hitSphere(Sphere* sphere, Ray* ray, Interval rayt, HitRecord* rec)
   rec->p   = rayAt(ray, root);
   rec->mat = sphere->mat;
 
-  Vec3 res;
+  Vec3f32 res;
   subVec3f32(&res, &rec->p, &sphere->center);
 
-  Vec3 outwardNormal;
+  Vec3f32 outwardNormal;
   scaleVec3f32(&outwardNormal, &res, 1 / sphere->radius);
 
   calculateFaceNormal(rec, ray, outwardNormal);

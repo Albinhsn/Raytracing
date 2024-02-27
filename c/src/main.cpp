@@ -10,6 +10,7 @@
 
 i32 main()
 {
+  initProfiler();
 
   srand(time(NULL));
 
@@ -17,7 +18,13 @@ i32 main()
   i32      worldLen = 1000;
   Hittable world[worldLen];
   world[0] = (Hittable){
-      .type = SPHERE, .sphere = (Sphere){.radius = 1000.0f, .center = CREATE_VEC3f32(0, -1000, 0), .mat = ground}
+      .type   = SPHERE, //
+      .sphere = (Sphere){
+                         //
+                         .center = CREATE_VEC3f32(0, -1000, 0), //
+ .radius = 1000.0f, //
+ .mat    = ground, //
+      }
   };
 
   u32 count = 1;
@@ -26,8 +33,11 @@ i32 main()
   {
     for (i32 b = -11; b < 11; b++)
     {
-      f32     chooseMat = RANDOM_DOUBLE;
-      Point   center    = (Point){.x = a + 0.9 * RANDOM_DOUBLE, 0.2, b + 0.9 * RANDOM_DOUBLE};
+      f32   chooseMat = RANDOM_DOUBLE;
+      Point center;
+      center.x = a + 0.9 * (RANDOM_DOUBLE);
+      center.y = 0.2f;
+      center.z = b + 0.9f * RANDOM_DOUBLE;
 
       Vec3f32 subRes;
       Vec3f32 idk = CREATE_VEC3f32(4.0f, 0.2, 0.0f);
@@ -39,10 +49,10 @@ i32 main()
         if (chooseMat < 0.8)
         {
 
-          Vec3  r0 = randomVec3f32();
-          Vec3  r1 = randomVec3f32();
+          Vec3f32 r0 = randomVec3f32();
+          Vec3f32 r1 = randomVec3f32();
 
-          Color albedo;
+          Color   albedo;
           mulVec3f32(&albedo, &r0, &r1);
 
           sphereMaterial.type = LAMBERTIAN;
@@ -50,10 +60,10 @@ i32 main()
         }
         else if (chooseMat < 0.95)
         {
-          Vec3  r0 = randomVec3f32();
-          Vec3  r1 = randomVec3f32();
+          Vec3f32 r0 = randomVec3f32();
+          Vec3f32 r1 = randomVec3f32();
 
-          Color albedo;
+          Color   albedo;
           mulVec3f32(&albedo, &r0, &r1);
 
           f32 fuzz             = RANDOM_DOUBLE_IN_RANGE(0, 0.5);
@@ -112,4 +122,6 @@ i32 main()
   camera.focusDist    = 10.0f;
 
   render(&camera, world, worldLen);
+
+  displayProfilingResult();
 }

@@ -5,57 +5,58 @@
 #include "vec3.h"
 
 class sphere : public hittable {
-    public:
-        // Stationary Sphere
-        sphere(point3 _center1, double _radius, std::shared_ptr<material> _material)
-            : center1(_center1), radius(_radius), mat(_material), is_moving(false) {}
+public:
+  // Stationary Sphere
+  sphere(point3 _center1, double _radius, std::shared_ptr<material> _material)
+      : center1(_center1), radius(_radius), mat(_material), is_moving(false) {}
 
-        // Moving Sphere
-        sphere(point3 _center1, point3 _center2, double _radius, std::shared_ptr<material> _material)
-            : center1(_center1), radius(_radius), mat(_material), is_moving(true) {
-            center_vec = _center2 - _center1;
-        }
+  // Moving Sphere
+  sphere(point3 _center1, point3 _center2, double _radius,
+         std::shared_ptr<material> _material)
+      : center1(_center1), radius(_radius), mat(_material), is_moving(true) {
+    center_vec = _center2 - _center1;
+  }
 
-        bool hit(const ray &r, interval ray_t, hit_record &rec) const override {
-            point3 center = is_moving ? this->center(r.time()) : center1;
-            vec3 oc = r.origin() - center;
-            auto a = r.direction().length_squared();
-            auto half_b = dot(oc, r.direction());
-            auto c = oc.length_squared() - radius * radius;
+  bool hit(const ray &r, interval ray_t, hit_record &rec) const override {
+    point3 center = is_moving ? this->center(r.time()) : center1;
+    vec3 oc = r.origin() - center;
+    auto a = r.direction().length_squared();
+    auto half_b = dot(oc, r.direction());
+    auto c = oc.length_squared() - radius * radius;
 
-            auto discriminant = half_b * half_b - a * c;
-            if (discriminant < 0) {
-                return false;
-            }
+    auto discriminant = half_b * half_b - a * c;
+    if (discriminant < 0) {
+      return false;
+    }
 
-            auto sqrtd = sqrt(discriminant);
+    auto sqrtd = sqrt(discriminant);
 
-            auto root = (-half_b - sqrtd) / a;
-            if (!ray_t.surrounds(root)) {
-                root = (-half_b + sqrtd) / a;
-                if (!ray_t.surrounds(root)) {
-                    return false;
-                }
-            }
+    auto root = (-half_b - sqrtd) / a;
+    if (!ray_t.surrounds(root)) {
+      root = (-half_b + sqrtd) / a;
+      if (!ray_t.surrounds(root)) {
+        return false;
+      }
+    }
 
-            rec.t = root;
-            rec.p = r.at(rec.t);
-            rec.normal = (rec.p - center) / radius;
-            vec3 outward_normal = (rec.p - center) / radius;
-            rec.set_face_normal(r, outward_normal);
-            rec.mat = mat;
+    rec.t = root;
+    rec.p = r.at(rec.t);
+    rec.normal = (rec.p - center) / radius;
+    vec3 outward_normal = (rec.p - center) / radius;
+    rec.set_face_normal(r, outward_normal);
+    rec.mat = mat;
 
-            return true;
-        }
+    return true;
+  }
 
-    private:
-        point3 center1;
-        double radius;
-        shared_ptr<material> mat;
-        bool is_moving;
-        point3 center_vec;
+private:
+  point3 center1;
+  double radius;
+  shared_ptr<material> mat;
+  bool is_moving;
+  point3 center_vec;
 
-        point3 center(double time) const { return center1 + time * center_vec; }
+  point3 center(double time) const { return center1 + time * center_vec; }
 };
 
 #endif

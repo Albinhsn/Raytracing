@@ -2,3 +2,5 @@ main
 .clang-format
 image.ppm
 obj
+earthmap.jpg
+gmon.out

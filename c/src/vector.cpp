@@ -173,17 +173,6 @@ bool nearZeroVec3f32(Vec3f32 v)
   return fabs(v.x) < s && fabs(v.y) < s && fabs(v.z) < s;
 }
 
-void writeColor(FILE* filePtr, Color v, i32 samples)
-{
-  f32      scale = 1.0 / (f32)samples;
-  f32      r     = LINEAR_TO_GAMMA((v.x * scale));
-  f32      g     = LINEAR_TO_GAMMA((v.y * scale));
-  f32      b     = LINEAR_TO_GAMMA((v.z * scale));
-
-  Interval i     = CREATE_INTERVAL(0.0, 0.999f);
-
-  fprintf(filePtr, "%d %d %d\n", (i32)(256 * clamp(i, r)), (i32)(256 * clamp(i, g)), (i32)(256 * clamp(i, b)));
-}
 
 void debugVec3f32(Vec3f32 v)
 {

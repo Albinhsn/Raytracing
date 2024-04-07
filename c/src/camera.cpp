@@ -59,7 +59,7 @@ Ray getRay(Camera* camera, i32 x, i32 y)
   addVec3f32(&pixelSample, &pixelCenter, &deltaSquared);
 
   Vec3f32 rayOrigin = camera->defocusAngle <= 0 ? camera->center : defocusDiskSample(camera);
-  Vec3f32     rayDirection;
+  Vec3f32 rayDirection;
   subVec3f32(&rayDirection, &pixelSample, &rayOrigin);
 
   return (Ray){.orig = rayOrigin, .dir = rayDirection};
@@ -79,20 +79,23 @@ typedef struct GatherColorArgs GatherColorArgs;
 
 void*                          gatherColors(void* arg)
 {
-  GatherColorArgs* args   = (GatherColorArgs*)arg;
-  Camera*          camera = args->camera;
+  GatherColorArgs args   = *(GatherColorArgs*)arg;
+  Camera*          camera = args.camera;
   u32              width  = camera->imageWidth;
 
-  for (u32 y = args->minY; y < args->maxY; y++)
+  u32              minY = args.minY, maxY = args.maxY;
+  u32              samples = args.samples;
+  for (u32 y = minY; y < maxY; y++)
   {
-    for (u32 x = 0; x < camera->imageWidth; x++)
+    for (u32 x = 0; x < width; x++)
     {
-      for (u32 sample = 0; sample < args->samples; sample++)
+      u32 idx = y * width + x;
+      for (u32 sample = 0; sample < samples; sample++)
       {
-        Ray   r           = getRay(camera, x, y);
-        Vec3f32  newRayColor = rayColor(&r, camera->maxDepth, args->world, args->worldLen);
-        Color a           = args->res[y * width + x];
-        addVec3f32(&args->res[y * width + x], &a, &newRayColor);
+        Ray     r           = getRay(camera, x, y);
+        Vec3f32 newRayColor = rayColor(&r, camera->maxDepth, args.world, args.worldLen);
+        Color   a           = args.res[idx];
+        addVec3f32(&args.res[idx], &a, &newRayColor);
       }
     }
   }
@@ -103,7 +106,6 @@ void*                          gatherColors(void* arg)
 
 void render(Camera* camera, Hittable* world, i32 worldLen)
 {
-  TimeFunction;
   initializeCamera(camera);
 
   FILE* filePtr = fopen("./image.ppm", "w");
@@ -144,9 +146,19 @@ void render(Camera* camera, Hittable* world, i32 worldLen)
       exit(2);
     }
   }
-  for (i32 i = 0; i < camera->imageWidth * camera->imageHeight; i++)
+  f32 finalSamples = camera->samples;
+  i32 tot          = camera->imageWidth * camera->imageHeight;
+  for (i32 i = 0; i < tot; i++)
   {
-    writeColor(filePtr, image[i], camera->samples);
+    Vec3f32  v        = image[i];
+    f32      scale    = 1.0 / finalSamples;
+    f32      r        = LINEAR_TO_GAMMA((v.x * scale));
+    f32      g        = LINEAR_TO_GAMMA((v.y * scale));
+    f32      b        = LINEAR_TO_GAMMA((v.z * scale));
+
+    Interval interval = CREATE_INTERVAL(0.0, 0.999f);
+
+    fprintf(filePtr, "%d %d %d\n", (i32)(256 * clamp(interval, r)), (i32)(256 * clamp(interval, g)), (i32)(256 * clamp(interval, b)));
   }
 }
 void initializeCamera(struct Camera* camera)
@@ -213,7 +225,6 @@ void initializeCamera(struct Camera* camera)
 }
 Color rayColor(Ray* r, i32 depth, Hittable* world, i32 worldLength)
 {
-  TimeFunction;
   if (depth <= 0)
   {
     return BLACK;
@@ -261,11 +272,11 @@ Color rayColor(Ray* r, i32 depth, Hittable* world, i32 worldLength)
 
   f32     a = 0.5 * (unitDirection.y + 1.0f);
 
-  Vec3f32    backgroundColor;
+  Vec3f32 backgroundColor;
   Vec3f32 someBlue = SOMEBLUE;
   scaleVec3f32(&backgroundColor, &someBlue, a);
 
-  Vec3f32    intColor;
+  Vec3f32 intColor;
   Vec3f32 white = WHITE;
   scaleVec3f32(&intColor, &white, (1.0 - a));
   Vec3f32 res;

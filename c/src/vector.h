@@ -133,5 +133,6 @@ void    crossVec3f32(Vec3f32* res, Vec3f32* v0, Vec3f32* v1);
 void    normalizeVec3f32(Vec3f32* res, Vec3f32* v);
 void    debugVec3f32(struct Vec3f32 v);
 void    writeColor(FILE* filePtr, Color v, i32 samples);
+f32 clamp(Interval i, f32 x);
 
 #endif

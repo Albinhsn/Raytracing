@@ -54,7 +54,7 @@ bool scatterMetal(Metal metal, Ray* rayIn, HitRecord* rec, Color* attenuation, R
   return dotVec3f32(&scattered->dir, &rec->normal) > 0;
 }
 
-inline bool scatterLambertian(Lambertian lambertian, HitRecord* rec, Color* attenuation, Ray* scattered)
+bool scatterLambertian(Lambertian lambertian, HitRecord* rec, Color* attenuation, Ray* scattered)
 {
   Vec3f32 direction;
   Vec3f32 randomUnit = randomUnitVector();
@@ -124,17 +124,10 @@ bool calculateRayIntersection(Hittable* hittableObjects, i32 length, Ray* ray, I
   for (i32 i = 0; i < length; i++)
   {
     Hittable obj = hittableObjects[i];
-    switch (obj.type)
+    if (hitSphere(&obj.sphere, ray, CREATE_INTERVAL(rayt.min, closestHit), rec))
     {
-    case SPHERE:
-    {
-      if (hitSphere(&obj.sphere, ray, CREATE_INTERVAL(rayt.min, closestHit), rec))
-      {
-        hit        = true;
-        closestHit = rec->t;
-      }
-      break;
-    }
+      hit        = true;
+      closestHit = rec->t;
     }
   }
   return hit;

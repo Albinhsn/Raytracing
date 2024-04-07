@@ -2,7 +2,7 @@ FILES = main.cpp vec3.h color.h
 
 
 br: 
-	g++ $(FILES) -o main && ./main > image.ppm
+	g++ -O2 $(FILES) -pg -g -o main && ./main > image.ppm
 
 i:
 	eog image.ppm

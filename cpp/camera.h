@@ -20,12 +20,12 @@ class camera {
         int max_depth = 10;
 
         double vfov = 90;
-        point3 lookfrom = point3(0, 0, -1);
+        point3 lookfrom = point3(0, 0, 0);
         point3 lookat = point3(0, 0, 0);
         vec3 vup = vec3(0, 1, 0);
 
         double defocus_angle = 0;
-        double focus_dist = 10;
+        double focus_dist = 5;
         color background;
 
         void render(const hittable &world) {

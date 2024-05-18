@@ -1,4 +1,4 @@
-FILES = main.cpp vec3.h color.h
+FILES = main.cpp
 
 
 br: 

@@ -99,9 +99,21 @@ inline vec3 random_in_unit_sphere() {
     }
 }
 
+inline vec3 random_cosine_direction() {
+    auto r1 = random_double();
+    auto r2 = random_double();
+
+    auto phi = 2*pi*r1;
+    auto x = cos(phi)*sqrt(r2);
+    auto y = sin(phi)*sqrt(r2);
+    auto z = sqrt(1-r2);
+
+    return vec3(x, y, z);
+}
+
 inline vec3 random_unit_vector() { return unit_vector(random_in_unit_sphere()); }
 
-inline vec3 random_on_hempisphere(const vec3 &normal) {
+inline vec3 random_on_hemisphere(const vec3 &normal) {
     vec3 on_unit_sphere = random_unit_vector();
     if (dot(on_unit_sphere, normal) > 0.0) {
         return on_unit_sphere;
